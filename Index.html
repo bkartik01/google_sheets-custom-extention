@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+</head>
+<body>
+  <div id="drop-area" style="border: 2px dashed #ccc; padding: 20px; text-align: center;">
+    Drop CSV File Here
+  </div>
+  <label for="sheetName">Enter Sheet Name:</label>
+  <input type="text" id="sheetName" placeholder="Enter sheet name">
+  <br>
+  <label for="columns">Select Columns to Import:</label>
+  <input type="text" id="columns" placeholder="Column1,Column2,Column3">
+  <br>
+  <button onclick="handleDroppedFile()">Import CSV</button>
+
+  <script>
+    var dropArea = document.getElementById('drop-area');
+
+    dropArea.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      dropArea.style.backgroundColor = '#f7f7f7';
+    });
+
+    dropArea.addEventListener('dragleave', function(e) {
+      e.preventDefault();
+      dropArea.style.backgroundColor = '#ffffff';
+    });
+
+    dropArea.addEventListener('drop', function(e) {
+      e.preventDefault();
+      dropArea.style.backgroundColor = '#ffffff';
+      var file = e.dataTransfer.files[0];
+      handleDroppedFile(file);
+    });
+
+    function handleDroppedFile(file) {
+      if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
+        var reader = new FileReader();
+
+        reader.onload = function(event) {
+          var csvContent = event.target.result;
+          var sheetName = document.getElementById('sheetName').value;
+          var columns = document.getElementById('columns').value.split(',');
+
+          var importData = csvContent.split('\n').map(function(row) {
+            return row.split(',');
+          });
+
+          importCSV(importData, columns, sheetName);
+        };
+
+        reader.readAsText(file);
+      } else {
+        alert('Error: Please drop a valid CSV file.');
+      }
+    }
+
+    function importCSV(importData, columns, sheetName) {
+      google.script.run.withSuccessHandler(function(response) {
+        if (response === 'Success') {
+          alert('CSV File Imported Successfully!');
+        } else {
+          alert('Error: ' + response);
+        }
+      }).withFailureHandler(function(error) {
+        console.error('Error:', error);
+        alert('Error: ' + error.message);
+      }).importCSV(importData, columns, sheetName);
+    }
+  </script>
+</body>
+</html>
